@@ -1,0 +1,35 @@
+name: Restore file from history
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_path:
+        description: 'Path to the file to restore (e.g., Transformer_20Newsgroup.ipynb)'
+        required: true
+        default: 'Transformer_20Newsgroup.ipynb'
+      commit_sha:
+        description: 'Commit SHA to restore from'
+        required: true
+        default: 'd502952'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore file from commit
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout ${{ github.event.inputs.commit_sha }} -- "${{ github.event.inputs.file_path }}"
+          git add "${{ github.event.inputs.file_path }}"
+          git commit -m "Restore ${{ github.event.inputs.file_path }} from ${{ github.event.inputs.commit_sha }}"
+          git push
